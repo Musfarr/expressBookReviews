@@ -7,11 +7,27 @@ const genl_routes = require('./router/general.js').general;
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded());
 
 app.use("/customer",session({secret:"fingerprint_customer",resave: true, saveUninitialized: true}))
 
 app.use("/customer/auth/*", function auth(req,res,next){
-//Write the authenication mechanism here
+
+    let accesstoken = req.session.authorization ;
+
+    if(accesstoken){
+        let decoded = jwt.verify(accesstoken , 'fingerprint_customer')
+        if(decoded){
+            req.session.user = decoded;
+            next();
+        }
+        else{
+            res.status(400).send('Invalid Token')
+        }
+    }
+    else{
+        res.status(400).send('User not Logged in')
+    }
 });
  
 const PORT =5000;
